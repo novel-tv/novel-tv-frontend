@@ -313,13 +313,13 @@ function HomeContent() {
           <h2 className="font-ui text-xl font-semibold text-text-primary sm:text-2xl">
             Live TV Channels
           </h2>
-          <a
-            href="#"
+          <Link
+            href="/live-tv"
             className="flex items-center gap-1 font-ui text-sm font-medium text-primary transition-colors duration-150 hover:text-accent"
           >
             View All Channels
             <ChevronRight size={16} />
-          </a>
+          </Link>
         </div>
 
         <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto pb-1">
@@ -441,34 +441,6 @@ function HomeContent() {
                     </p>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="hidden flex-1 lg:block" />
-
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row lg:flex-col">
-              <p className="font-ui text-sm font-semibold uppercase text-text-secondary">
-                Download Now
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <a href="#" aria-label="Download on the App Store">
-                  <Image
-                    src="/images/get-on-app-store.png"
-                    alt="Download on the App Store"
-                    width={435}
-                    height={145}
-                    className="h-11 w-auto"
-                  />
-                </a>
-                <a href="#" aria-label="Get it on Google Play">
-                  <Image
-                    src="/images/get-on-google-play.png"
-                    alt="Get it on Google Play"
-                    width={435}
-                    height={145}
-                    className="h-11 w-auto"
-                  />
-                </a>
               </div>
             </div>
           </div>

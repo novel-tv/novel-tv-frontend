@@ -16,13 +16,16 @@ import {
   Bookmark,
   Loader2,
 } from "lucide-react";
-import { movieGenreFilters } from "@/lib/demo-data";
 import { fetchMovies, type Movie } from "@/lib/movies";
+import { fetchGenres, type Genre } from "@/lib/genres";
 import { PosterCard } from "@/components/PosterCard";
 
+const ALL_FILTER = "All";
+const FEATURED_FILTER = "Featured";
+
 const genreIcons: Record<string, React.ComponentType<{ size?: number }>> = {
-  Featured: Star,
-  "New Releases": Sparkles,
+  [ALL_FILTER]: Sparkles,
+  [FEATURED_FILTER]: Star,
 };
 
 const bottomNavItems = [
@@ -39,20 +42,30 @@ function movieSubtitle(movie: Movie): string {
     .join(" · ");
 }
 
-function MovieRow({ title, movies }: { title: string; movies: Movie[] }) {
+function MovieRow({
+  title,
+  movies,
+  onViewAll,
+}: {
+  title: string;
+  movies: Movie[];
+  onViewAll?: () => void;
+}) {
   if (movies.length === 0) return null;
 
   return (
     <section className="mx-auto max-w-360 px-4 py-8 sm:px-6 lg:px-10">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-ui text-xl font-semibold text-text-primary sm:text-2xl">{title}</h2>
-        <a
-          href="#"
-          className="flex items-center gap-1 font-ui text-sm font-medium text-primary transition-colors duration-150 hover:text-accent"
-        >
-          View All
-          <ChevronRight size={16} />
-        </a>
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="flex items-center gap-1 font-ui text-sm font-medium text-primary transition-colors duration-150 hover:text-accent"
+          >
+            View All
+            <ChevronRight size={16} />
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -74,14 +87,33 @@ function MovieRow({ title, movies }: { title: string; movies: Movie[] }) {
 
 export default function MoviesPage() {
   const pathname = usePathname();
-  const [activeGenre, setActiveGenre] = useState(movieGenreFilters[0]);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [activeGenre, setActiveGenre] = useState(ALL_FILTER);
 
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([]);
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [newReleaseMovies, setNewReleaseMovies] = useState<Movie[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const tabs = [ALL_FILTER, FEATURED_FILTER, ...genres.map((genre) => genre.name)];
   const heroMovie = featuredMovies[0] ?? trendingMovies[0] ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchGenres()
+      .then((data) => {
+        if (!cancelled) setGenres(data);
+      })
+      .catch(() => {
+        if (!cancelled) setGenres([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +148,43 @@ export default function MoviesPage() {
       cancelled = true;
     };
   }, []);
+
+  // Only the curated rows above need the "All" state's three separate
+  // fetches — selecting a real filter (Featured, or a genre) replaces them
+  // with a single filtered grid instead, mirroring the tabs' own two
+  // genuinely-supported backend params (MovieController::index() accepts
+  // `featured` and `genre`, nothing else) rather than pretending a tab
+  // exists for anything the backend can't actually filter by.
+  useEffect(() => {
+    if (activeGenre === ALL_FILTER) {
+      setFilteredMovies([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        const data =
+          activeGenre === FEATURED_FILTER
+            ? await fetchMovies({ featured: true, perPage: 20 })
+            : await fetchMovies({
+                genre: genres.find((genre) => genre.name === activeGenre)?.slug,
+                perPage: 20,
+              });
+        if (!cancelled) setFilteredMovies(data);
+      } catch {
+        if (!cancelled) setFilteredMovies([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeGenre, genres]);
 
   return (
     <>
@@ -181,7 +250,7 @@ export default function MoviesPage() {
             </div>
 
             <div className="no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1">
-              {movieGenreFilters.map((genre) => {
+              {tabs.map((genre) => {
                 const Icon = genreIcons[genre];
                 const selected = activeGenre === genre;
                 return (
@@ -209,12 +278,25 @@ export default function MoviesPage() {
             <div className="flex justify-center py-16">
               <Loader2 size={20} className="animate-spin text-text-secondary" />
             </div>
-          ) : (
+          ) : activeGenre === ALL_FILTER ? (
             <>
-              <MovieRow title="Featured Movies" movies={featuredMovies} />
+              <MovieRow
+                title="Featured Movies"
+                movies={featuredMovies}
+                onViewAll={() => setActiveGenre(FEATURED_FILTER)}
+              />
               <MovieRow title="Trending Now" movies={trendingMovies} />
               <MovieRow title="New Releases" movies={newReleaseMovies} />
             </>
+          ) : filteredMovies.length === 0 ? (
+            <p className="mx-auto max-w-360 px-4 py-16 text-center font-body text-sm text-text-secondary sm:px-6 lg:px-10">
+              No movies found in {activeGenre === FEATURED_FILTER ? "Featured" : activeGenre}.
+            </p>
+          ) : (
+            <MovieRow
+              title={activeGenre === FEATURED_FILTER ? "Featured Movies" : `${activeGenre} Movies`}
+              movies={filteredMovies}
+            />
           )}
         </div>
       </div>

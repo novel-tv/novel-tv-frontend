@@ -6,8 +6,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Play,
-  ChevronRight,
   TrendingUp,
+  Star,
   Tv,
   Clapperboard,
   Home as HomeIcon,
@@ -15,12 +15,16 @@ import {
   Bookmark,
   Loader2,
 } from "lucide-react";
-import { tvShowFilters } from "@/lib/demo-data";
 import { fetchSeriesList, fetchSeriesBySlug, type Series, type Episode, type Season } from "@/lib/series";
+import { fetchGenres, type Genre } from "@/lib/genres";
 import { PosterCard } from "@/components/PosterCard";
 
+const ALL_FILTER = "All";
+const FEATURED_FILTER = "Featured";
+
 const filterIcons: Record<string, React.ComponentType<{ size?: number }>> = {
-  Popular: TrendingUp,
+  [ALL_FILTER]: TrendingUp,
+  [FEATURED_FILTER]: Star,
 };
 
 const bottomNavItems = [
@@ -83,14 +87,33 @@ function NewEpisodeRow({ item }: { item: LatestEpisode }) {
 
 export default function TvShowsPage() {
   const pathname = usePathname();
-  const [activeFilter, setActiveFilter] = useState(tvShowFilters[0]);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
 
   const [trendingShows, setTrendingShows] = useState<Series[]>([]);
   const [moreShows, setMoreShows] = useState<Series[]>([]);
   const [latestEpisodes, setLatestEpisodes] = useState<LatestEpisode[]>([]);
+  const [filteredShows, setFilteredShows] = useState<Series[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const tabs = [ALL_FILTER, FEATURED_FILTER, ...genres.map((genre) => genre.name)];
   const heroShow = trendingShows[0] ?? moreShows[0] ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchGenres()
+      .then((data) => {
+        if (!cancelled) setGenres(data);
+      })
+      .catch(() => {
+        if (!cancelled) setGenres([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +157,41 @@ export default function TvShowsPage() {
       cancelled = true;
     };
   }, []);
+
+  // Mirrors the Movies page: "All" keeps the curated sections above, any
+  // real filter (Featured, or a genre) replaces them with a single grid —
+  // SeriesController::index() only accepts `featured`/`genre`, so those
+  // are the only tabs beyond "All" that can actually filter anything.
+  useEffect(() => {
+    if (activeFilter === ALL_FILTER) {
+      setFilteredShows([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        const data =
+          activeFilter === FEATURED_FILTER
+            ? await fetchSeriesList({ featured: true, perPage: 20 })
+            : await fetchSeriesList({
+                genre: genres.find((genre) => genre.name === activeFilter)?.slug,
+                perPage: 20,
+              });
+        if (!cancelled) setFilteredShows(data);
+      } catch {
+        if (!cancelled) setFilteredShows([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeFilter, genres]);
 
   return (
     <>
@@ -199,7 +257,7 @@ export default function TvShowsPage() {
             </div>
 
             <div className="no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1">
-              {tvShowFilters.map((filter) => {
+              {tabs.map((filter) => {
                 const Icon = filterIcons[filter];
                 const selected = activeFilter === filter;
                 return (
@@ -227,7 +285,7 @@ export default function TvShowsPage() {
             <div className="flex justify-center py-16">
               <Loader2 size={20} className="animate-spin text-text-secondary" />
             </div>
-          ) : (
+          ) : activeFilter === ALL_FILTER ? (
             <>
               {/* ==================== Trending Now Section: Start ==================== */}
               {trendingShows.length > 0 && (
@@ -236,13 +294,6 @@ export default function TvShowsPage() {
                     <h2 className="font-ui text-xl font-semibold text-text-primary sm:text-2xl">
                       Trending Now
                     </h2>
-                    <a
-                      href="#"
-                      className="flex items-center gap-1 font-ui text-sm font-medium text-primary transition-colors duration-150 hover:text-accent"
-                    >
-                      View All
-                      <ChevronRight size={16} />
-                    </a>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -268,13 +319,6 @@ export default function TvShowsPage() {
                     <h2 className="font-ui text-xl font-semibold text-text-primary sm:text-2xl">
                       More Series
                     </h2>
-                    <a
-                      href="#"
-                      className="flex items-center gap-1 font-ui text-sm font-medium text-primary transition-colors duration-150 hover:text-accent"
-                    >
-                      View All
-                      <ChevronRight size={16} />
-                    </a>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -311,6 +355,28 @@ export default function TvShowsPage() {
               )}
               {/* ====================== Latest Episodes Section: End ====================== */}
             </>
+          ) : (
+            <section className="mx-auto max-w-360 px-4 py-8 sm:px-6 lg:px-10">
+              <h2 className="mb-4 font-ui text-xl font-semibold text-text-primary sm:text-2xl">
+                {activeFilter === FEATURED_FILTER ? "Featured Series" : `${activeFilter} Series`}
+              </h2>
+              {filteredShows.length === 0 ? (
+                <p className="font-body text-sm text-text-secondary">No series found in this category yet.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                  {filteredShows.map((show) => (
+                    <PosterCard
+                      key={show.id}
+                      href={`/series/${show.slug}`}
+                      title={show.title}
+                      posterUrl={show.poster_url}
+                      subtitle={seriesSubtitle(show)}
+                      cornerTag={show.certification ?? undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
           )}
         </div>
       </div>

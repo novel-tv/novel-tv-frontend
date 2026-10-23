@@ -8,7 +8,6 @@ import {
   Play,
   LayoutGrid,
   ChevronDown,
-  ChevronRight,
   Loader2,
   Tv,
   Newspaper,
@@ -171,13 +170,6 @@ export default function LiveTvPage() {
             <h2 className="font-ui text-xl font-semibold text-text-primary sm:text-2xl">
               Now on Live
             </h2>
-            <a
-              href="#"
-              className="flex items-center gap-1 font-ui text-sm font-bold uppercase tracking-wide text-primary transition-colors duration-150 hover:text-accent"
-            >
-              View Full Guide
-              <ChevronRight size={16} />
-            </a>
           </div>
 
           {isLoading ? (

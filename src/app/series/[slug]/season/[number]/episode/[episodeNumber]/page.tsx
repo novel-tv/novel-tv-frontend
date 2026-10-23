@@ -11,7 +11,10 @@ import { useFavorites } from "@/lib/favorites-context";
 import { recordProgress } from "@/lib/watch-history";
 import { getDeviceId } from "@/lib/device";
 import { sendPlaybackHeartbeat, stopPlaybackSession } from "@/lib/playback-sessions";
+import { fetchRelatedSeries } from "@/lib/related-content";
+import type { SearchResult } from "@/lib/search";
 import { ContentPlayer } from "@/components/ContentPlayer";
+import { PosterCard } from "@/components/PosterCard";
 import type { ContentAccess, PlaybackTokens } from "@/lib/catalog-types";
 
 export default function EpisodeDetailPage({
@@ -32,6 +35,7 @@ export default function EpisodeDetailPage({
   const [watchedProgress, setWatchedProgress] = useState<number | null>(null);
   const [playbackTokens, setPlaybackTokens] = useState<PlaybackTokens | null | undefined>(undefined);
   const [screenLimitMessage, setScreenLimitMessage] = useState<string | null>(null);
+  const [relatedTitles, setRelatedTitles] = useState<SearchResult[]>([]);
   const recordedEpisodeId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -55,6 +59,22 @@ export default function EpisodeDetailPage({
         if (!cancelled) setIsLoading(false);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchRelatedSeries(slug)
+      .then((data) => {
+        if (!cancelled) setRelatedTitles(data);
+      })
+      .catch(() => {
+        if (!cancelled) setRelatedTitles([]);
+      });
 
     return () => {
       cancelled = true;
@@ -285,6 +305,27 @@ export default function EpisodeDetailPage({
                     )}
                   </Link>
                 ))}
+            </div>
+          </div>
+        )}
+
+        {relatedTitles.length > 0 && (
+          <div className="mt-10">
+            <h2 className="mb-4 font-ui text-xl font-semibold text-text-primary sm:text-2xl">
+              You Might Also Like
+            </h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              {relatedTitles.map((item) => (
+                <PosterCard
+                  key={`${item.type}-${item.id}`}
+                  href={item.type === "series" ? `/series/${item.slug}` : `/movies/${item.slug}`}
+                  title={item.title}
+                  posterUrl={item.poster_url}
+                  subtitle={item.year ? String(item.year) : undefined}
+                  topLeftBadge={item.is_ppv ? "PPV" : undefined}
+                  topRightBadge={item.type === "series" ? "Series" : undefined}
+                />
+              ))}
             </div>
           </div>
         )}

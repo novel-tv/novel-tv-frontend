@@ -247,17 +247,6 @@ export const onNextItems = [
 
 export const streamingDevices = ["Smart TV", "Phone", "Tablet", "Laptop"];
 
-export const movieGenreFilters = [
-  "Featured",
-  "New Releases",
-  "Action",
-  "Drama",
-  "Comedy",
-  "Thriller",
-  "Horror",
-  "Documentary",
-];
-
 export type Movie = {
   id: string;
   title: string;
@@ -289,19 +278,6 @@ export const newReleaseMovies: Movie[] = [
   { id: "kingdom-planet-apes", title: "Kingdom of the Planet of the Apes", year: 2024, runtime: "2h 25m", rating: "PG-13" },
   { id: "twisters", title: "Twisters", year: 2024, runtime: "2h 2m", rating: "PG-13" },
   { id: "beetlejuice-2", title: "Beetlejuice Beetlejuice", year: 2024, runtime: "1h 44m", rating: "PG-13" },
-];
-
-export const tvShowFilters = [
-  "Popular",
-  "A-Z",
-  "New Episodes",
-  "Coming Soon",
-  "Drama",
-  "Action",
-  "Comedy",
-  "Reality",
-  "Crime",
-  "Documentary",
 ];
 
 export type TrendingShow = {
@@ -372,30 +348,6 @@ export const myListItems: SavedItem[] = [
   { id: "bmf", title: "BMF", type: "TV Show", year: 2021, meta: "3 Seasons", rating: "TV-MA" },
   { id: "dune-part-two", title: "Dune: Part Two", type: "Movie", year: 2024, meta: "2h 46m", rating: "PG-13" },
   { id: "snowfall", title: "Snowfall", type: "TV Show", year: 2017, meta: "6 Seasons", rating: "TV-MA" },
-];
-
-export const originalsFilters = ["All", "Series", "Films", "Coming Soon"];
-
-export type OriginalItem = {
-  id: string;
-  title: string;
-  type: "Series" | "Film";
-  meta: string;
-  tag: "Exclusive" | "Coming Soon";
-};
-
-export const novelOriginals: OriginalItem[] = [
-  { id: "all-hustle", title: "All Hustle", type: "Series", meta: "2 Seasons", tag: "Exclusive" },
-  { id: "ruthless", title: "Ruthless", type: "Series", meta: "3 Seasons", tag: "Exclusive" },
-  { id: "sauce-city", title: "Sauce City", type: "Series", meta: "1 Season", tag: "Exclusive" },
-  { id: "paid-in-full", title: "Paid in Full", type: "Film", meta: "1h 47m", tag: "Exclusive" },
-  { id: "corner-office", title: "Corner Office", type: "Series", meta: "1 Season", tag: "Exclusive" },
-];
-
-export const comingSoonOriginals: OriginalItem[] = [
-  { id: "blood-money", title: "Blood Money", type: "Series", meta: "Fall 2026", tag: "Coming Soon" },
-  { id: "the-come-up", title: "The Come Up", type: "Film", meta: "Winter 2026", tag: "Coming Soon" },
-  { id: "night-shift", title: "Night Shift", type: "Series", meta: "2026", tag: "Coming Soon" },
 ];
 
 export const helpCategories = [
