@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Play, PlayCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { fetchSeriesAccess, fetchSeriesBySlug, type Series } from "@/lib/series";
 import { startPpvCheckout } from "@/lib/ppv";
@@ -13,6 +13,7 @@ import type { ContentAccess } from "@/lib/catalog-types";
 import { ApiError } from "@/lib/api";
 import { EmbeddedCheckoutModal } from "@/components/EmbeddedCheckoutModal";
 import { PpvCouponInput } from "@/components/PpvCouponInput";
+import { TrailerModal } from "@/components/TrailerModal";
 
 export default function SeriesDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -28,6 +29,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
     null,
   );
   const [appliedCoupon, setAppliedCoupon] = useState<CouponPreview | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,6 +147,13 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
           onComplete={handleCheckoutComplete}
         />
       )}
+      {showTrailer && series.trailer_url && (
+        <TrailerModal
+          title={series.title}
+          trailerUrl={series.trailer_url}
+          onClose={() => setShowTrailer(false)}
+        />
+      )}
       <div className="relative isolate min-h-100 overflow-hidden sm:min-h-125">
         <div className="absolute inset-0 -z-10">
           <Image
@@ -202,6 +211,16 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
 
             {series.synopsis && (
               <p className="mt-5 font-body text-base text-text-secondary">{series.synopsis}</p>
+            )}
+
+            {series.trailer_url && (
+              <button
+                onClick={() => setShowTrailer(true)}
+                className="mt-5 flex w-fit items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary"
+              >
+                <PlayCircle size={18} />
+                Play Trailer
+              </button>
             )}
 
             {series.is_ppv && !canWatch && (

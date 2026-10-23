@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Loader2, Check, Plus } from "lucide-react";
+import { Play, PlayCircle, Loader2, Check, Plus } from "lucide-react";
 import { fetchMovieAccess, fetchMovieBySlug, fetchMoviePlaybackToken, type Movie } from "@/lib/movies";
 import { startPpvCheckout } from "@/lib/ppv";
 import type { CheckoutGateway } from "@/lib/subscriptions";
@@ -19,6 +19,7 @@ import { ContentPlayer } from "@/components/ContentPlayer";
 import { EmbeddedCheckoutModal } from "@/components/EmbeddedCheckoutModal";
 import { PosterCard } from "@/components/PosterCard";
 import { PpvCouponInput } from "@/components/PpvCouponInput";
+import { TrailerModal } from "@/components/TrailerModal";
 import type { ContentAccess, PlaybackTokens } from "@/lib/catalog-types";
 
 export default function MovieDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -39,6 +40,7 @@ export default function MovieDetailPage({ params }: { params: Promise<{ slug: st
   );
   const [appliedCoupon, setAppliedCoupon] = useState<CouponPreview | null>(null);
   const [relatedTitles, setRelatedTitles] = useState<SearchResult[]>([]);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -217,6 +219,13 @@ export default function MovieDetailPage({ params }: { params: Promise<{ slug: st
           onComplete={handleCheckoutComplete}
         />
       )}
+      {showTrailer && movie.trailer_url && (
+        <TrailerModal
+          title={movie.title}
+          trailerUrl={movie.trailer_url}
+          onClose={() => setShowTrailer(false)}
+        />
+      )}
       <div className="relative isolate min-h-100 overflow-hidden sm:min-h-125">
         <div className="absolute inset-0 -z-10">
           <Image
@@ -336,6 +345,16 @@ export default function MovieDetailPage({ params }: { params: Promise<{ slug: st
                       Add to My List
                     </>
                   )}
+                </button>
+              )}
+
+              {movie.trailer_url && (
+                <button
+                  onClick={() => setShowTrailer(true)}
+                  className="flex items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary"
+                >
+                  <PlayCircle size={18} />
+                  Play Trailer
                 </button>
               )}
             </div>

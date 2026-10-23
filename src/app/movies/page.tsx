@@ -19,6 +19,7 @@ import {
 import { fetchMovies, type Movie } from "@/lib/movies";
 import { fetchGenres, type Genre } from "@/lib/genres";
 import { PosterCard } from "@/components/PosterCard";
+import { TrailerModal } from "@/components/TrailerModal";
 
 const ALL_FILTER = "All";
 const FEATURED_FILTER = "Featured";
@@ -95,6 +96,7 @@ export default function MoviesPage() {
   const [newReleaseMovies, setNewReleaseMovies] = useState<Movie[]>([]);
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   const tabs = [ALL_FILTER, FEATURED_FILTER, ...genres.map((genre) => genre.name)];
   const heroMovie = featuredMovies[0] ?? trendingMovies[0] ?? null;
@@ -188,6 +190,13 @@ export default function MoviesPage() {
 
   return (
     <>
+      {showTrailer && heroMovie?.trailer_url && (
+        <TrailerModal
+          title={heroMovie.title}
+          trailerUrl={heroMovie.trailer_url}
+          onClose={() => setShowTrailer(false)}
+        />
+      )}
       <div className="pb-16 lg:pb-0">
         {/* ===================== Hero Section: Start ===================== */}
         <section className="relative isolate min-h-115 overflow-hidden bg-background sm:min-h-125">
@@ -223,7 +232,15 @@ export default function MoviesPage() {
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-4">
-                {heroMovie ? (
+                {heroMovie?.trailer_url ? (
+                  <button
+                    onClick={() => setShowTrailer(true)}
+                    className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent"
+                  >
+                    <Play size={18} fill="currentColor" />
+                    Play Trailer
+                  </button>
+                ) : heroMovie ? (
                   <Link
                     href={`/movies/${heroMovie.slug}`}
                     className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent"
