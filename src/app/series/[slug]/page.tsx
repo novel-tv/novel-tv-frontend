@@ -213,56 +213,62 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
               <p className="mt-5 font-body text-base text-text-secondary">{series.synopsis}</p>
             )}
 
-            {series.trailer_url && (
-              <button
-                onClick={() => setShowTrailer(true)}
-                className="mt-5 flex w-fit items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary"
-              >
-                <PlayCircle size={18} />
-                Play Trailer
-              </button>
-            )}
-
-            {series.is_ppv && !canWatch && (
-              <div className="mt-6">
-                {!user || access?.reason === "requires_subscription" ? (
-                  <Link
-                    href="/pricing"
-                    className="flex w-fit items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent"
+            {(series.trailer_url || (series.is_ppv && !canWatch)) && (
+              <div className="mt-5 flex flex-wrap items-center gap-4">
+                {series.trailer_url && (
+                  <button
+                    onClick={() => setShowTrailer(true)}
+                    className="flex items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary"
                   >
-                    <Play size={18} fill="currentColor" />
-                    Subscribe to Watch
-                  </Link>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={() => handleRent("stripe")}
-                      disabled={checkoutGateway !== null}
-                      className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Play size={18} fill="currentColor" />
-                      {checkoutGateway === "stripe"
-                        ? "Loading checkout…"
-                        : `Rent with Card${series.ppv_price ? ` — $${discountedPpvPrice(series.ppv_price).toFixed(2)}` : ""}`}
-                    </button>
-                    <button
-                      onClick={() => handleRent("paypal")}
-                      disabled={checkoutGateway !== null}
-                      className="flex items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {checkoutGateway === "paypal" ? "Redirecting…" : "Rent with PayPal"}
-                    </button>
-                    <PpvCouponInput
-                      purchasableType="series"
-                      purchasableId={series.id}
-                      appliedCoupon={appliedCoupon}
-                      onApply={setAppliedCoupon}
-                      onRemove={() => setAppliedCoupon(null)}
-                    />
-                  </div>
+                    <PlayCircle size={18} />
+                    Play Trailer
+                  </button>
                 )}
-                {rentError && <p className="mt-3 font-body text-sm text-error">{rentError}</p>}
+
+                {series.is_ppv && !canWatch && (
+                  <>
+                    {!user || access?.reason === "requires_subscription" ? (
+                      <Link
+                        href="/pricing"
+                        className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent"
+                      >
+                        <Play size={18} fill="currentColor" />
+                        Subscribe to Watch
+                      </Link>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          onClick={() => handleRent("stripe")}
+                          disabled={checkoutGateway !== null}
+                          className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Play size={18} fill="currentColor" />
+                          {checkoutGateway === "stripe"
+                            ? "Loading checkout…"
+                            : `Rent with Card${series.ppv_price ? ` — $${discountedPpvPrice(series.ppv_price).toFixed(2)}` : ""}`}
+                        </button>
+                        <button
+                          onClick={() => handleRent("paypal")}
+                          disabled={checkoutGateway !== null}
+                          className="flex items-center gap-2 rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {checkoutGateway === "paypal" ? "Redirecting…" : "Rent with PayPal"}
+                        </button>
+                        <PpvCouponInput
+                          purchasableType="series"
+                          purchasableId={series.id}
+                          appliedCoupon={appliedCoupon}
+                          onApply={setAppliedCoupon}
+                          onRemove={() => setAppliedCoupon(null)}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+            )}
+            {series.is_ppv && !canWatch && rentError && (
+              <p className="mt-3 font-body text-sm text-error">{rentError}</p>
             )}
 
             {series.cast && series.cast.length > 0 && (

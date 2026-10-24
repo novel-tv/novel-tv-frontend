@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Mail, Phone, MessageCircle, Clock } from "lucide-react";
+import { ApiError } from "@/lib/api";
+import { submitContactForm } from "@/lib/contact";
 
 const contactMethods = [
   {
@@ -30,9 +33,27 @@ const contactMethods = [
 ];
 
 export default function ContactUsPage() {
-  function handleSubmit(e: React.FormEvent) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Wire up to the Contact Messages API once the backend is ready.
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await submitContactForm({ name, email, subject, message });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -48,66 +69,102 @@ export default function ContactUsPage() {
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-5">
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-xl border border-border bg-surface p-6 sm:p-8 lg:col-span-3"
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {submitted ? (
+          <div className="space-y-4 rounded-xl border border-border bg-surface p-6 sm:p-8 lg:col-span-3">
+            <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 font-body text-sm text-success">
+              Thanks for reaching out — we&apos;ll get back to you soon.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSubmitted(false);
+                setName("");
+                setEmail("");
+                setSubject("");
+                setMessage("");
+              }}
+              className="rounded-md border border-text-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary transition-colors duration-150 hover:border-primary hover:bg-primary"
+            >
+              Send Another Message
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 rounded-xl border border-border bg-surface p-6 sm:p-8 lg:col-span-3"
+          >
+            {error && (
+              <p className="rounded-md border border-error/30 bg-error/10 px-3 py-2 font-body text-sm text-error">
+                {error}
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                Name
+                Subject
               </label>
               <input
                 type="text"
                 required
-                placeholder="Your name"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="How can we help?"
                 className="w-full rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </div>
+
             <div>
               <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                Email
+                Message
               </label>
-              <input
-                type="email"
+              <textarea
                 required
-                placeholder="you@example.com"
-                className="w-full rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                rows={5}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell us more…"
+                className="w-full resize-none rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </div>
-          </div>
 
-          <div>
-            <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
-              Subject
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="How can we help?"
-              className="w-full rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block font-ui text-xs font-semibold uppercase tracking-wide text-text-secondary">
-              Message
-            </label>
-            <textarea
-              required
-              rows={5}
-              placeholder="Tell us more…"
-              className="w-full resize-none rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent"
-          >
-            Send Message
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-md bg-primary px-6 py-3 font-ui text-sm font-bold uppercase tracking-wide text-text-primary shadow-primary transition-colors duration-150 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? "Sending…" : "Send Message"}
+            </button>
+          </form>
+        )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
           {contactMethods.map(({ icon: Icon, title, detail, subtext }) => (
