@@ -65,26 +65,28 @@ export function Footer({ siteSettings }: { siteSettings?: SiteSettings }) {
         <p className="mt-10 text-center font-body text-xs text-text-muted">
           {resolveFooterText(settings.footer_text)}
         </p>
-        <p className="mt-2 text-center font-body text-xs text-text-muted">
-          Designed by{" "}
-          <a
-            href="https://taskhubrecruitmentsolutions.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-text-secondary transition-colors duration-150 hover:text-accent"
-          >
-            TASKHUB
-          </a>{" "}
-          and Developed by{" "}
-          <a
-            href="https://algomatryx.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-text-secondary transition-colors duration-150 hover:text-accent"
-          >
-            AlgoMatryx
-          </a>
-        </p>
+        {settings.credit_is_visible && (
+          <p className="mt-2 text-center font-body text-xs text-text-muted">
+            Designed by{" "}
+            <a
+              href={settings.credit_designer_url ?? DEFAULT_SITE_SETTINGS.credit_designer_url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-secondary transition-colors duration-150 hover:text-accent"
+            >
+              {settings.credit_designer_label ?? DEFAULT_SITE_SETTINGS.credit_designer_label}
+            </a>{" "}
+            and Developed by{" "}
+            <a
+              href={settings.credit_developer_url ?? DEFAULT_SITE_SETTINGS.credit_developer_url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-secondary transition-colors duration-150 hover:text-accent"
+            >
+              {settings.credit_developer_label ?? DEFAULT_SITE_SETTINGS.credit_developer_label}
+            </a>
+          </p>
+        )}
       </div>
     </footer>
   );

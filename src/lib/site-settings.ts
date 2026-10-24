@@ -6,6 +6,11 @@ export type SiteSettings = {
   tagline: string | null;
   footer_text: string | null;
   discourage_search_engines: boolean;
+  credit_designer_label: string | null;
+  credit_designer_url: string | null;
+  credit_developer_label: string | null;
+  credit_developer_url: string | null;
+  credit_is_visible: boolean;
 };
 
 // Shown whenever the admin hasn't set a field yet (or the request fails) —
@@ -18,6 +23,11 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     "Stream unlimited movies, TV shows, and live channels — anytime, anywhere, no limits.",
   footer_text: "© {year} Novel TV. All Rights Reserved.",
   discourage_search_engines: false,
+  credit_designer_label: "TASKHUB",
+  credit_designer_url: "https://taskhubrecruitmentsolutions.com/",
+  credit_developer_label: "AlgoMatryx",
+  credit_developer_url: "https://algomatryx.com/",
+  credit_is_visible: true,
 };
 
 export function resolveFooterText(footerText: string | null): string {
