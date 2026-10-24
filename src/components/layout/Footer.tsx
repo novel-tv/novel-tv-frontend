@@ -65,6 +65,26 @@ export function Footer({ siteSettings }: { siteSettings?: SiteSettings }) {
         <p className="mt-10 text-center font-body text-xs text-text-muted">
           {resolveFooterText(settings.footer_text)}
         </p>
+        <p className="mt-2 text-center font-body text-xs text-text-muted">
+          Designed by{" "}
+          <a
+            href="https://taskhubrecruitmentsolutions.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-text-secondary transition-colors duration-150 hover:text-accent"
+          >
+            TASKHUB
+          </a>{" "}
+          and Developed by{" "}
+          <a
+            href="https://algomatryx.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-text-secondary transition-colors duration-150 hover:text-accent"
+          >
+            AlgoMatryx
+          </a>
+        </p>
       </div>
     </footer>
   );
