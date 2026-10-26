@@ -3,6 +3,7 @@ import { Bebas_Neue, Roboto_Condensed, Roboto, Permanent_Marker } from "next/fon
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { EmailVerificationBanner } from "@/components/layout/EmailVerificationBanner";
+import { MaintenanceBanner } from "@/components/layout/MaintenanceBanner";
 import { AuthProvider } from "@/lib/auth-context";
 import { FavoritesProvider } from "@/lib/favorites-context";
 import { NotificationsProvider } from "@/lib/notifications-context";
@@ -66,6 +67,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <FavoritesProvider>
             <NotificationsProvider>
+              <MaintenanceBanner
+                text={siteSettings.maintenance_banner_text}
+                isVisible={siteSettings.maintenance_banner_is_visible}
+              />
               <Header logoUrl={siteSettings.logo_url} />
               <EmailVerificationBanner />
               <main className="flex-1">{children}</main>

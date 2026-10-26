@@ -11,6 +11,8 @@ export type SiteSettings = {
   credit_developer_label: string | null;
   credit_developer_url: string | null;
   credit_is_visible: boolean;
+  maintenance_banner_text: string | null;
+  maintenance_banner_is_visible: boolean;
 };
 
 // Shown whenever the admin hasn't set a field yet (or the request fails) —
@@ -28,6 +30,9 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   credit_developer_label: "AlgoMatryx",
   credit_developer_url: "https://algomatryx.com/",
   credit_is_visible: true,
+  maintenance_banner_text:
+    "This site is still under maintenance and will be available to use soon.",
+  maintenance_banner_is_visible: false,
 };
 
 export function resolveFooterText(footerText: string | null): string {
