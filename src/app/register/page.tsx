@@ -8,6 +8,9 @@ import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { getSocialLoginUrl, registerUser } from "@/lib/auth";
 import { useAuth } from "@/lib/auth-context";
+import { useIntegrationSettings } from "@/lib/use-integration-settings";
+import { isRecaptchaV2Required, useRecaptcha } from "@/lib/use-recaptcha";
+import { RecaptchaV2Challenge } from "@/components/RecaptchaV2Challenge";
 
 function GoogleIcon() {
   return (
@@ -58,23 +61,32 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
+  const integrationSettings = useIntegrationSettings();
+  const recaptcha = useRecaptcha(integrationSettings, "register");
+
+  function goToLogin() {
+    const loginUrl = redirectParam
+      ? `/login?registered=1&redirect=${encodeURIComponent(redirectParam)}`
+      : "/login?registered=1";
+    router.push(loginUrl);
+  }
+
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
     setIsSubmitting(true);
 
+    const fields = { name, email, password, password_confirmation: passwordConfirmation };
+
     try {
-      await registerUser({
-        name,
-        email,
-        password,
-        password_confirmation: passwordConfirmation,
-      });
-      const loginUrl = redirectParam
-        ? `/login?registered=1&redirect=${encodeURIComponent(redirectParam)}`
-        : "/login?registered=1";
-      router.push(loginUrl);
+      try {
+        await registerUser({ ...fields, ...(await recaptcha.getV3Fields()) });
+      } catch (err) {
+        if (!isRecaptchaV2Required(err)) throw err;
+        await registerUser({ ...fields, ...(await recaptcha.waitForV2()) });
+      }
+      goToLogin();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -263,6 +275,10 @@ function RegisterForm() {
               Privacy Policy
             </Link>
           </label>
+
+          {recaptcha.needsV2 && recaptcha.v2SiteKey && (
+            <RecaptchaV2Challenge siteKey={recaptcha.v2SiteKey} onVerify={recaptcha.handleV2Verified} />
+          )}
 
           <button
             type="submit"

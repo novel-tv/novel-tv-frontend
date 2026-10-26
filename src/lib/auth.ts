@@ -14,12 +14,16 @@ type AuthResponse = {
   token_type: string;
 };
 
-export async function registerUser(input: {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}): Promise<AuthUser> {
+type RecaptchaFields = Partial<{ recaptcha_token: string; recaptcha_version: "v2" | "v3" }>;
+
+export async function registerUser(
+  input: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  } & RecaptchaFields,
+): Promise<AuthUser> {
   // Deliberately doesn't store the returned token — registering sends the
   // user to the login page to sign in explicitly, rather than auto-logging them in.
   const response = await apiFetch<AuthResponse>("auth/register", {
@@ -30,7 +34,9 @@ export async function registerUser(input: {
   return response.user;
 }
 
-export async function loginUser(input: { email: string; password: string }): Promise<AuthUser> {
+export async function loginUser(
+  input: { email: string; password: string } & RecaptchaFields,
+): Promise<AuthUser> {
   const response = await apiFetch<AuthResponse>("auth/login", {
     method: "POST",
     body: JSON.stringify(input),

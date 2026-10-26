@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Mail, Phone, MessageCircle, Clock } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { submitContactForm } from "@/lib/contact";
+import { useIntegrationSettings } from "@/lib/use-integration-settings";
+import { isRecaptchaV2Required, useRecaptcha } from "@/lib/use-recaptcha";
+import { RecaptchaV2Challenge } from "@/components/RecaptchaV2Challenge";
 
 const contactMethods = [
   {
@@ -41,13 +44,23 @@ export default function ContactUsPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const integrationSettings = useIntegrationSettings();
+  const recaptcha = useRecaptcha(integrationSettings, "contact");
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
+    const fields = { name, email, subject, message };
+
     try {
-      await submitContactForm({ name, email, subject, message });
+      try {
+        await submitContactForm({ ...fields, ...(await recaptcha.getV3Fields()) });
+      } catch (err) {
+        if (!isRecaptchaV2Required(err)) throw err;
+        await submitContactForm({ ...fields, ...(await recaptcha.waitForV2()) });
+      }
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
@@ -155,6 +168,10 @@ export default function ContactUsPage() {
                 className="w-full resize-none rounded-md border border-border bg-surface-light px-3 py-2.5 font-body text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </div>
+
+            {recaptcha.needsV2 && recaptcha.v2SiteKey && (
+              <RecaptchaV2Challenge siteKey={recaptcha.v2SiteKey} onVerify={recaptcha.handleV2Verified} />
+            )}
 
             <button
               type="submit"

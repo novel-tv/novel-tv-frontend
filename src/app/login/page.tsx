@@ -9,6 +9,9 @@ import { ApiError } from "@/lib/api";
 import { getSocialLoginUrl, loginUser } from "@/lib/auth";
 import { useAuth } from "@/lib/auth-context";
 import { getSafeRedirectPath } from "@/lib/safe-redirect";
+import { useIntegrationSettings } from "@/lib/use-integration-settings";
+import { isRecaptchaV2Required, useRecaptcha } from "@/lib/use-recaptcha";
+import { RecaptchaV2Challenge } from "@/components/RecaptchaV2Challenge";
 
 function GoogleIcon() {
   return (
@@ -62,13 +65,22 @@ function LoginForm() {
     socialError === "not_configured" ? "Social sign-in isn't set up yet. Please sign in with email instead." : null,
   );
 
+  const integrationSettings = useIntegrationSettings();
+  const recaptcha = useRecaptcha(integrationSettings, "login");
+
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const user = await loginUser({ email, password });
+      let user;
+      try {
+        user = await loginUser({ email, password, ...(await recaptcha.getV3Fields()) });
+      } catch (err) {
+        if (!isRecaptchaV2Required(err)) throw err;
+        user = await loginUser({ email, password, ...(await recaptcha.waitForV2()) });
+      }
       setUser(user);
       router.push(redirectTarget);
     } catch (err) {
@@ -212,6 +224,10 @@ function LoginForm() {
               Forgot password?
             </Link>
           </div>
+
+          {recaptcha.needsV2 && recaptcha.v2SiteKey && (
+            <RecaptchaV2Challenge siteKey={recaptcha.v2SiteKey} onVerify={recaptcha.handleV2Verified} />
+          )}
 
           <button
             type="submit"

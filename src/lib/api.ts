@@ -30,12 +30,22 @@ export function clearStoredToken(): void {
 export class ApiError extends Error {
   status: number;
   errors: Record<string, string[]> | null;
+  // The raw JSON body, when there was one — lets callers read extra
+  // response-specific flags (e.g. recaptcha_requires_v2) without every
+  // such flag needing its own constructor parameter here.
+  body: Record<string, unknown> | null;
 
-  constructor(message: string, status: number, errors: Record<string, string[]> | null = null) {
+  constructor(
+    message: string,
+    status: number,
+    errors: Record<string, string[]> | null = null,
+    body: Record<string, unknown> | null = null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.errors = errors;
+    this.body = body;
   }
 }
 
@@ -64,6 +74,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       body?.message ?? "Something went wrong. Please try again.",
       response.status,
       body?.errors ?? null,
+      body ?? null,
     );
   }
 

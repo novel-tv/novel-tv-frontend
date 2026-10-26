@@ -21,5 +21,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       userAgent: "*",
       allow: "/",
     },
+    // Lets search engines auto-discover the sitemap (src/app/sitemap.ts)
+    // without waiting on a manual Search Console submission.
+    sitemap: "https://www.novel-network.com/sitemap.xml",
   };
 }

@@ -4,10 +4,12 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { EmailVerificationBanner } from "@/components/layout/EmailVerificationBanner";
 import { MaintenanceBanner } from "@/components/layout/MaintenanceBanner";
+import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { AuthProvider } from "@/lib/auth-context";
 import { FavoritesProvider } from "@/lib/favorites-context";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { fetchSiteSettings } from "@/lib/site-settings";
+import { fetchIntegrationSettings } from "@/lib/integration-settings";
 import "./globals.css";
 
 const fontHeading = Bebas_Neue({
@@ -36,6 +38,7 @@ const fontAccent = Permanent_Marker({
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSiteSettings();
+  const integrationSettings = await fetchIntegrationSettings();
   const favicon = settings.favicon_url ?? "/favicon.png";
 
   return {
@@ -52,11 +55,18 @@ export async function generateMetadata(): Promise<Metadata> {
     robots: settings.discourage_search_engines
       ? { index: false, follow: false }
       : undefined,
+    // Next's built-in support for Search Console's "HTML tag" verification
+    // method — renders <meta name="google-site-verification" content="...">
+    // in <head> when set, nothing at all when not.
+    verification: integrationSettings.google_search_console_verification
+      ? { google: integrationSettings.google_search_console_verification }
+      : undefined,
   };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const siteSettings = await fetchSiteSettings();
+  const integrationSettings = await fetchIntegrationSettings();
 
   return (
     <html
@@ -64,6 +74,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fontHeading.variable} ${fontUi.variable} ${fontBody.variable} ${fontAccent.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-text-primary font-body">
+        <GoogleAnalytics measurementId={integrationSettings.google_analytics_id} />
         <AuthProvider>
           <FavoritesProvider>
             <NotificationsProvider>
